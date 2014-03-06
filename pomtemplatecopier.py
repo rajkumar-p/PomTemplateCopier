@@ -35,3 +35,17 @@ arguments_parser.add_argument("-ct", "--change_type",
 arguments_parser.add_argument("-ns", "--namespace",
                               type=str,
                               help="The namespace of the node to be changed. If not given, the root node's namespace is taken")
+
+commandline_arguments = arguments_parser.parse_args()
+
+if commandline_arguments.version is None:
+    print "Version cannot be empty. Type -h for script usage"
+    exit(0)
+
+namespace = ""
+
+if commandline_arguments.namespace is None:
+    namespace = ""
+else:
+    namespace = commandline_arguments.namespace
+
