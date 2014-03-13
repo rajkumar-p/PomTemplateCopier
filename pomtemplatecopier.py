@@ -1,4 +1,6 @@
 import argparse
+import Queue
+import os.path
 
 # Parser for the command line arguments
 arguments_parser = argparse.ArgumentParser()
@@ -38,14 +40,28 @@ arguments_parser.add_argument("-ns", "--namespace",
 
 commandline_arguments = arguments_parser.parse_args()
 
-if commandline_arguments.version is None:
+version = ""
+starting_dir = ""
+stop_dir = ""
+
+if commandline_arguments.version:
+    version = commandline_arguments.version
+else:
     print "Version cannot be empty. Type -h for script usage"
     exit(0)
 
-namespace = ""
-
-if commandline_arguments.namespace is None:
-    namespace = ""
+if commandline_arguments.start_dir:
+    starting_dir = commandline_arguments
 else:
-    namespace = commandline_arguments.namespace
+    starting_dir = "."
 
+if commandline_arguments.stop_dir:
+    stop_dir = commandline_arguments.stop_dir
+else:
+    stop_dir = "XXXXXXXXXX"
+
+directories = Queue.Queue()
+directories.put(os.path.abspath(starting_dir))
+
+while not directories.empty():
+    current_dir = directories.get()
