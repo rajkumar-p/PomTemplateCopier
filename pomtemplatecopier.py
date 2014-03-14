@@ -35,23 +35,7 @@ arguments_parser.add_argument("-stop", "--stop_dir",
                               type=str,
                               help="The directory from where to stop processing it and its children")
 
-arguments_parser.add_argument("-ntc", "--node_to_change",
-                              type=str,
-                              help="The XML node to be changed. If not given, the pom template is just copied as is")
-
-arguments_parser.add_argument("-nv", "--new_value",
-                              type=str,
-                              help="The new value to be substituted. If no value is given, empty string is used")
-
-arguments_parser.add_argument("-ct", "--change_type",
-                              type=str,
-                              help="0 denotes a tag change and 1 denotes a text change. 1 is the default value")
-
-arguments_parser.add_argument("-ns", "--namespace",
-                              type=str,
-                              help="The namespace of the node to be changed. If not given, the root node's namespace is taken")
-
-commandline_arguments = arguments_parser.parse_args()
+commandline_arguments = arguments_parser.parse()
 
 error_msg_both_not_present = "Pom and pom template not present."
 error_msg_pom_not_present = "Pom not present."
@@ -63,32 +47,84 @@ version = ""
 starting_dir = ""
 stop_dir = ""
 
+directories = Queue.Queue()
+
+recurse = True
+
 if commandline_arguments.version:
     version = commandline_arguments.version
 else:
     print "Version cannot be empty. Type -h for script usage"
     exit(0)
 
-if commandline_arguments.start_dir:
-    starting_dir = commandline_arguments
-else:
-    starting_dir = "."
+if commandline_arguments.file:
+    recurse = False
+    try:
+        dir_fh = open(commandline_arguments.file, "r")
+        lines = dir_fh.readlines()
 
-if commandline_arguments.stop_dir:
-    stop_dir = commandline_arguments.stop_dir
-else:
-    stop_dir = "XXXXXXXXXX"
+        for line in lines:
+            directories.put(line.strip())
+
+    except IOError:
+        print "Error. Cannot open file passed."
+        exit(0)
+
+if recurse:
+    if commandline_arguments.start_dir:
+        starting_dir = commandline_arguments
+    else:
+        starting_dir = "."
+
+    if commandline_arguments.stop_dir:
+        stop_dir = commandline_arguments.stop_dir
+    else:
+        stop_dir = "XXXXXXXXXX"
+
+    directories.put(os.path.abspath(starting_dir))
 
 logger = open("ptc_session.log", "w")
 
-directories = Queue.Queue()
-directories.put(os.path.abspath(starting_dir))
 
 while not directories.empty():
     current_dir = directories.get()
 
-    if current_dir == stop_dir:
-        writeLineToFile(logger, stopping_at_dir.format(current_dir))
+    if recurse:
+        if current_dir == stop_dir:
+            writeLineToFile(logger, stopping_at_dir.format(current_dir))
+            continue
+
+    pom_file = current_dir + os.path.sep + "pom.xml"
+    pom_template_file = current_dir + os.path.sep + "pom.template.xml"
+
+    printDirBanner(logger, current_dir)
+
+    pom_present_flag = True
+    pom_template_present_flag = True
+
+    try:
+        with open(pom_file):
+            pass
+    except IOError:
+        pom_present_flag = False
+
+    try:
+        with open(pom_template_file):
+            pass
+    except IOError:
+        pom_template_present_flag = False
+
+    if not pom_present_flag and not pom_template_present_flag:
+        writeLineToFile(logger, error_msg_both_not_present)
+        writeLineToFile("")
+        continue
+    elif not pom_present_flag:
+        writeLineToFile(logger, error_msg_pom_not_present)
+        writeLineToFile("")
+        continue
+    elif not pom_template_present_flag:
+        writeLineToFile(logger, error_msg_pom_template_not_present)
+        writeLineToFile("")
         continue
 
 logger.close()
