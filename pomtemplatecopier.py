@@ -2,6 +2,19 @@ import argparse
 import Queue
 import os.path
 
+# Helper functions
+def writeToFile(file_handle, string_to_be_written):
+    file_handle.write(string_to_be_written)
+
+def writeLineToFile(file_handle, string_to_be_written):
+    writeToFile(file_handle, string_to_be_written)
+    writeToFile(file_handle, "\n")
+
+def printDirBanner(file_handle, current_dir):
+    writeLineToFile(file_handle, len(current_dir) * "-")
+    writeLineToFile(file_handle, current_dir)
+    writeLineToFile(file_handle, len(current_dir) * "-")
+
 # Parser for the command line arguments
 arguments_parser = argparse.ArgumentParser()
 
@@ -40,6 +53,12 @@ arguments_parser.add_argument("-ns", "--namespace",
 
 commandline_arguments = arguments_parser.parse_args()
 
+error_msg_both_not_present = "Pom and pom template not present."
+error_msg_pom_not_present = "Pom not present."
+error_msg_pom_template_not_present = "Pom template not present."
+
+stopping_at_dir = "STOPPING AT DIR - {0}."
+
 version = ""
 starting_dir = ""
 stop_dir = ""
@@ -60,8 +79,16 @@ if commandline_arguments.stop_dir:
 else:
     stop_dir = "XXXXXXXXXX"
 
+logger = open("ptc_session.log", "w")
+
 directories = Queue.Queue()
 directories.put(os.path.abspath(starting_dir))
 
 while not directories.empty():
     current_dir = directories.get()
+
+    if current_dir == stop_dir:
+        writeLineToFile(logger, stopping_at_dir.format(current_dir))
+        continue
+
+logger.close()
