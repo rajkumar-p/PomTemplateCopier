@@ -1,6 +1,7 @@
 import argparse
 import Queue
 import os.path
+import re
 
 # Helper functions
 def writeToFile(file_handle, string_to_be_written):
@@ -14,6 +15,16 @@ def printDirBanner(file_handle, current_dir):
     writeLineToFile(file_handle, len(current_dir) * "-")
     writeLineToFile(file_handle, current_dir)
     writeLineToFile(file_handle, len(current_dir) * "-")
+
+def checkIfFileExists(filename):
+    try:
+        with open(filename):
+            return True
+    except IOError:
+        return False
+
+def getFileHandle(filename, permissions):
+    return open(filename, permissions)
 
 # Parser for the command line arguments
 arguments_parser = argparse.ArgumentParser()
@@ -94,37 +105,34 @@ while not directories.empty():
             writeLineToFile(logger, stopping_at_dir.format(current_dir))
             continue
 
+        # Push the child directories into the directories Q
+        for d in [os.path.join(current_dir, directory)
+                        for directory in os.listdir(current_dir)
+                            if os.path.isdir(current_dir + os.path.sep + directory)]:
+            directories.put(d)
+
     pom_file = current_dir + os.path.sep + "pom.xml"
     pom_template_file = current_dir + os.path.sep + "pom.template.xml"
 
     printDirBanner(logger, current_dir)
 
-    pom_present_flag = True
-    pom_template_present_flag = True
-
-    try:
-        with open(pom_file):
-            pass
-    except IOError:
-        pom_present_flag = False
-
-    try:
-        with open(pom_template_file):
-            pass
-    except IOError:
-        pom_template_present_flag = False
-
-    if not pom_present_flag and not pom_template_present_flag:
-        writeLineToFile(logger, error_msg_both_not_present)
-        writeLineToFile("")
-        continue
-    elif not pom_present_flag:
-        writeLineToFile(logger, error_msg_pom_not_present)
-        writeLineToFile("")
-        continue
-    elif not pom_template_present_flag:
+    if not checkIfFileExists(pom_template_file):
         writeLineToFile(logger, error_msg_pom_template_not_present)
         writeLineToFile("")
         continue
+
+    pom_fh = getFileHandle(pom_file, "w")
+    pom_template_fh = getFileHandle(pom_template_file, "r")
+
+    pom_template_contents = pom_fh.read()
+
+    # Change the ${temp.version} in pom_template
+    p = re.compile(r"\$\{temp\.version\}")
+    pom_template_subs_contents = p.sub(commandline_arguments.version, pom_template_contents)
+
+    pom_fh.write(pom_template_subs_contents)
+
+    pom_fh.close()
+    pom_template_fh.close()
 
 logger.close()
