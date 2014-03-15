@@ -16,7 +16,7 @@ def printDirBanner(file_handle, current_dir):
     writeLineToFile(file_handle, current_dir)
     writeLineToFile(file_handle, len(current_dir) * "-")
 
-def checkIfFileExists(filename):
+def fileExists(filename):
     try:
         with open(filename):
             return True
@@ -77,6 +77,8 @@ if commandline_arguments.file:
         for line in lines:
             directories.put(line.strip())
 
+        dir_fh.close()
+
     except IOError:
         print "Error. Cannot open file passed."
         exit(0)
@@ -116,7 +118,7 @@ while not directories.empty():
 
     printDirBanner(logger, current_dir)
 
-    if not checkIfFileExists(pom_template_file):
+    if not fileExists(pom_template_file):
         writeLineToFile(logger, error_msg_pom_template_not_present)
         writeLineToFile("")
         continue
