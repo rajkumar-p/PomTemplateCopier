@@ -5,18 +5,34 @@ import re
 
 # Helper functions
 def writeToFile(file_handle, string_to_be_written):
+    """
+    Helper to write to file
+    input: file_handle, string_to_be_written
+    """
     file_handle.write(string_to_be_written)
 
 def writeLineToFile(file_handle, string_to_be_written):
+    """
+    Helper to write line to file
+    input: file_handle, string_to_be_written
+    """
     writeToFile(file_handle, string_to_be_written)
     writeToFile(file_handle, "\n")
 
 def printDirBanner(file_handle, current_dir):
+    """
+    Helper to print the banner around the directory name
+    input: file_handle, current_dir
+    """
     writeLineToFile(file_handle, len(current_dir) * "-")
     writeLineToFile(file_handle, current_dir)
     writeLineToFile(file_handle, len(current_dir) * "-")
 
 def fileExists(filename):
+    """
+    Helper to check if a file exists
+    input: filename
+    """
     try:
         with open(filename):
             return True
@@ -24,6 +40,10 @@ def fileExists(filename):
         return False
 
 def getFileHandle(filename, permissions):
+    """
+    Helper to get the file handle
+    input: filename, permissions
+    """
     return open(filename, permissions)
 
 # Parser for the command line arguments
