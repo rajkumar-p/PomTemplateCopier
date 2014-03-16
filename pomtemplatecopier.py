@@ -66,8 +66,10 @@ arguments_parser.add_argument("-stop", "--stop_dir",
                               type=str,
                               help="The directory from where to stop processing it and its children")
 
+# Parse the arguments passed
 commandline_arguments = arguments_parser.parse()
 
+# Error messages used
 error_msg_both_not_present = "Pom and pom template not present."
 error_msg_pom_not_present = "Pom not present."
 error_msg_pom_template_not_present = "Pom template not present."
@@ -78,8 +80,10 @@ version = ""
 starting_dir = ""
 stop_dir = ""
 
+# Directories Q
 directories = Queue.Queue()
 
+# Flag to control the recursive behavior of the program
 recurse = True
 
 if commandline_arguments.version:
@@ -88,6 +92,7 @@ else:
     print "Version cannot be empty. Type -h for script usage"
     exit(0)
 
+# If a file is passed, change only in the directories in the file
 if commandline_arguments.file:
     recurse = False
     try:
@@ -116,12 +121,14 @@ if recurse:
 
     directories.put(os.path.abspath(starting_dir))
 
+# Logger to be used in the program
 logger = open("ptc_session.log", "w")
 
-
+# Process every directory in the Q
 while not directories.empty():
     current_dir = directories.get()
 
+    # Process other directories recursively only of the flag is set
     if recurse:
         if current_dir == stop_dir:
             writeLineToFile(logger, stopping_at_dir.format(current_dir))
@@ -133,6 +140,7 @@ while not directories.empty():
                             if os.path.isdir(current_dir + os.path.sep + directory)]:
             directories.put(d)
 
+    # Pom and pom.template files
     pom_file = current_dir + os.path.sep + "pom.xml"
     pom_template_file = current_dir + os.path.sep + "pom.template.xml"
 
@@ -154,6 +162,7 @@ while not directories.empty():
 
     pom_fh.write(pom_template_subs_contents)
 
+    # Close the file handles
     pom_fh.close()
     pom_template_fh.close()
 
