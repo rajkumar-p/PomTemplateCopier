@@ -39,13 +39,6 @@ def fileExists(filename):
     except IOError:
         return False
 
-def getFileHandle(filename, permissions):
-    """
-    Helper to get the file handle
-    input: filename, permissions
-    """
-    return open(filename, permissions)
-
 # Parser for the command line arguments
 arguments_parser = argparse.ArgumentParser()
 
@@ -151,8 +144,8 @@ while not directories.empty():
         writeLineToFile("")
         continue
 
-    pom_fh = getFileHandle(pom_file, "w")
-    pom_template_fh = getFileHandle(pom_template_file, "r")
+    pom_fh = open(pom_file, "w")
+    pom_template_fh = open(pom_template_file, "r")
 
     pom_template_contents = pom_fh.read()
 
