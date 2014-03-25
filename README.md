@@ -18,7 +18,7 @@ Various paramters can be given to control the run of the program.
 -start (--start_dir) - The directory where the program is to be run. Default is the present directory
 -stop (--stop_dir) - This specifies where the program needs to stop. By default, it will run till the starting directory tree is depleted
 
-<code>python pomtemplatecopier.py -4 -start . -stop src</code>  
+<code>python pomtemplatecopier.py -start . -stop src</code>  
 <code>python pomtemplatecopier.py -f dir_list.in</code>
 
 ## License
