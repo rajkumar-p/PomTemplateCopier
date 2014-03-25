@@ -39,6 +39,14 @@ def fileExists(filename):
     except IOError:
         return False
 
+def getChildrenDirectories(current_dir):
+    return [os.path.join(current_dir, directory)
+                    for directory in os.listdir(current_dir)
+                        if os.path.isdir(current_dir + os.path.sep + directory)]
+
+def getDirName(current_dir):
+    return os.path.basename(current_dir.strip("/\\"))
+
 # Parser for the command line arguments
 arguments_parser = argparse.ArgumentParser()
 
@@ -88,18 +96,16 @@ else:
 # If a file is passed, change only in the directories in the file
 if commandline_arguments.file:
     recurse = False
-    try:
+
+    # Check if the file exists
+    if fileExists(commandline_arguments.file):
         dir_fh = open(commandline_arguments.file, "r")
-        lines = dir_fh.readlines()
+        lines = dir_fh.readline()
 
         for line in lines:
             directories.put(line.strip())
 
         dir_fh.close()
-
-    except IOError:
-        print "Error. Cannot open file passed."
-        exit(0)
 
 if recurse:
     if commandline_arguments.start_dir:
@@ -121,16 +127,12 @@ logger = open("ptc_session.log", "w")
 while not directories.empty():
     current_dir = directories.get()
 
-    # Process other directories recursively only of the flag is set
-    if recurse:
-        if current_dir == stop_dir:
-            writeLineToFile(logger, stopping_at_dir.format(current_dir))
-            continue
+    # Get the children directories
+    children = getChildrenDirectories(current_dir)
 
-        # Push the child directories into the directories Q
-        for d in [os.path.join(current_dir, directory)
-                        for directory in os.listdir(current_dir)
-                            if os.path.isdir(current_dir + os.path.sep + directory)]:
+    # If stop directory, do not put it into the Q
+    for d in children:
+        if getDirName(d) != stop_dir:
             directories.put(d)
 
     # Pom and pom.template files
