@@ -1,6 +1,7 @@
 import argparse
 import Queue
-import os.path
+import os
+import stat
 import re
 
 # Helper functions
@@ -68,11 +69,9 @@ arguments_parser.add_argument("-stop", "--stop_dir",
                               help="The directory from where to stop processing it and its children")
 
 # Parse the arguments passed
-commandline_arguments = arguments_parser.parse()
+commandline_arguments = arguments_parser.parse_args()
 
 # Error messages used
-error_msg_both_not_present = "Pom and pom template not present."
-error_msg_pom_not_present = "Pom not present."
 error_msg_pom_template_not_present = "Pom template not present."
 
 stopping_at_dir = "STOPPING AT DIR - {0}."
@@ -109,7 +108,7 @@ if commandline_arguments.file:
 
 if recurse:
     if commandline_arguments.start_dir:
-        starting_dir = commandline_arguments
+        starting_dir = commandline_arguments.start_dir
     else:
         starting_dir = "."
 
@@ -136,20 +135,30 @@ while not directories.empty():
             directories.put(d)
 
     # Pom and pom.template files
-    pom_file = current_dir + os.path.sep + "pom.xml"
+    pom_file = current_dir + os.path.sep + "pom.temp.xml"
     pom_template_file = current_dir + os.path.sep + "pom.template.xml"
 
     printDirBanner(logger, current_dir)
 
     if not fileExists(pom_template_file):
         writeLineToFile(logger, error_msg_pom_template_not_present)
-        writeLineToFile("")
         continue
+
+    # Check if the pom file is read only
+    pom_file_read_only = False
+
+    if fileExists(pom_file):
+        fileAtt = os.stat(pom_file).st_mode
+        pom_file_read_only = not (fileAtt & stat.S_IWRITE)
+
+    # If read only, change the attribute before writing
+    if pom_file_read_only:
+        os.chmod(pom_file, stat.S_IWRITE)
 
     pom_fh = open(pom_file, "w")
     pom_template_fh = open(pom_template_file, "r")
 
-    pom_template_contents = pom_fh.read()
+    pom_template_contents = pom_template_fh.read()
 
     # Change the ${temp.version} in pom_template
     p = re.compile(r"\$\{temp\.version\}")
@@ -160,5 +169,8 @@ while not directories.empty():
     # Close the file handles
     pom_fh.close()
     pom_template_fh.close()
+
+    # Log success
+    writeLineToFile(logger, "Pom.xml replacement done")
 
 logger.close()
