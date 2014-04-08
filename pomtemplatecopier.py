@@ -135,7 +135,7 @@ while not directories.empty():
             directories.put(d)
 
     # Pom and pom.template files
-    pom_file = current_dir + os.path.sep + "pom.temp.xml"
+    pom_file = current_dir + os.path.sep + "pom.xml"
     pom_template_file = current_dir + os.path.sep + "pom.template.xml"
 
     printDirBanner(logger, current_dir)
@@ -169,6 +169,9 @@ while not directories.empty():
     # Close the file handles
     pom_fh.close()
     pom_template_fh.close()
+
+    # Make the file read only after manipulating
+    os.chmod(pom_file, stat.S_IREAD)
 
     # Log success
     writeLineToFile(logger, "Pom.xml replacement done")
