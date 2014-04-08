@@ -170,8 +170,9 @@ while not directories.empty():
     pom_fh.close()
     pom_template_fh.close()
 
-    # Make the file read only after manipulating
-    os.chmod(pom_file, stat.S_IREAD)
+    # Make the file read only if it was initially read only
+    if pom_file_read_only:
+        os.chmod(pom_file, stat.S_IREAD)
 
     # Log success
     writeLineToFile(logger, "Pom.xml replacement done")
